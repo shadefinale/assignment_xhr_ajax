@@ -4,7 +4,7 @@ var $ = (function(){
     var defaultOpts = {
       async: opts.async || false,
       complete: opts.complete || function(){ console.log("Request Completed.")},
-      data : opts.data || {},
+      data : queryStringify(opts.data) || false,
       error: opts.error || function(){ console.log("Request Failure...")},
       headers: opts.headers || { header: "Content-type", value: "application/x-www-form-urlencoded" },
       method: opts.method || "GET",
@@ -16,7 +16,7 @@ var $ = (function(){
 
     xhr.onload = function ( e ) {
       if ( xhr.readyState === 4 ) {
-        if ( xhr.status === 200 ) {
+        if ( xhr.status >= 200 && xhr.status < 300 ) {
           console.log( defaultOpts.success(xhr) );
           // defaultOpts.success();
           // console.log( this.responseText )
@@ -29,7 +29,7 @@ var $ = (function(){
 
     xhr.open( defaultOpts.method, defaultOpts.url, defaultOpts.async );
     xhr.setRequestHeader( defaultOpts.headers.header, defaultOpts.headers.value );
-    xhr.send();
+    defaultOpts.data ? xhr.send(JSON.stringify(defaultOpts.data)) : xhr.send();
   }
 
   var get = function(opts){
@@ -62,13 +62,33 @@ var $ = (function(){
     ajax(defaultOpts)
   }
 
+  var queryStringify = function(opts){
+    var result = "";
+    for (key in opts){
+      result += "&";
+      result += key;
+      result += "=";
+      result += opts[key];
+    }
+    return result.slice(1);
+  }
+
   return {
     ajax: ajax,
     get: get,
-    post: post
+    post: post,
+    queryStringify: queryStringify,
   };
 })();
 
 
-$.ajax({async: true, success: function(xhr){return xhr.responseText}, url: 'http://reqr.es/api/users?page=2'})
-$.ajax({async: true, url: 'http://reqr.es/api/users/23', error: function(xhr){return xhr.responseText}})
+// $.ajax({async: true, success: function(xhr){return xhr.responseText}, url: 'http://reqr.es/api/users?page=2'})
+// $.ajax({async: true, url: 'http://reqr.es/api/users/23', error: function(xhr){return xhr.responseText}})
+// $.get({async: true, success: function(xhr){return xhr.responseText}, url: 'http://reqr.es/api/users?page=2'})
+$.post({data: {
+        "name": "morpheus",
+        "job": "leader"
+      },
+       async: true,
+       url: 'http://reqr.es/api/users',
+       success: function(xhr){return JSON.parse(xhr.responseText) }});
